@@ -1,36 +1,40 @@
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
+using EventEase.Models;
 
-namespace EventEase.Models
+namespace EventEase.Data
 {
-    public class Booking
+    public class ApplicationDbContext : DbContext
     {
-        [Key]
-        public int BookingId { get; set; }
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+            : base(options) { }
 
-        [Required]
-        [Display(Name = "Event")]
-        public int EventId { get; set; }
+        public DbSet<Venue> Venues { get; set; }
+        public DbSet<Event> Events { get; set; }
+        public DbSet<Booking> Bookings { get; set; }
+        public DbSet<EventType> EventTypes { get; set; }  // New DbSet
 
-        [ForeignKey("EventId")]
-        public Event? Event { get; set; }
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
 
-        [Required]
-        [Display(Name = "Venue")]
-        public int VenueId { get; set; }
+            // Configure Event -> EventType relationship
+            modelBuilder.Entity<Event>()
+                .HasOne(e => e.EventType)
+                .WithMany(et => et.Events)
+                .HasForeignKey(e => e.EventTypeId)
+                .OnDelete(DeleteBehavior.Restrict);
 
-        [ForeignKey("VenueId")]
-        public Venue? Venue { get; set; }
+            // Default availability true
+            modelBuilder.Entity<Venue>()
+                .Property(v => v.Availability)
+                .HasDefaultValue(true);
 
-        [Required(ErrorMessage = "Booking date is required")]
-        public DateTime BookingDate { get; set; }
-
-        [Required(ErrorMessage = "Customer name is required")]
-        [StringLength(100)]
-        public string CustomerName { get; set; }
-
-        [Required]
-        [EmailAddress(ErrorMessage = "Invalid email address")]
-        public string CustomerEmail { get; set; }
+            // Seed EventTypes (optional)
+            modelBuilder.Entity<EventType>().HasData(
+                new EventType { EventTypeId = 1, Name = "Conference" },
+                new EventType { EventTypeId = 2, Name = "Wedding" },
+                new EventType { EventTypeId = 3, Name = "Concert" }
+            );
+        }
     }
 }

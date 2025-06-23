@@ -1,8 +1,72 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
-}
+﻿@model IEnumerable<EventEase.Models.Event>
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
-</div>
+    @{
+    ViewData["Title"] = "Events";
+    var eventTypes = ViewData["EventTypes"] as List<EventEase.Models.EventType>;
+    }
+
+    <h1>Events</h1>
+
+    <form method="get" asp-action="Index" class="mb-3">
+        <div class="form-row align-items-center">
+            <div class="col-auto">
+                <label for="eventTypeId" class="sr-only">Event Type</label>
+                <select id="eventTypeId" name="eventTypeId" class="form-control">
+                    <option value="0">All Event Types</option>
+                    @foreach (var type in eventTypes)
+                {
+                    <option value="@type.EventTypeId" @(Request.Query["eventTypeId"] == type.EventTypeId.ToString() ? "selected" : "")>@type.Name</option>
+                }
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <label for="startDate" class="sr-only">Start Date</label>
+                <input type="date" id="startDate" name="startDate" value="@Request.Query["startDate"]" class="form-control" />
+            </div>
+
+            <div class="col-auto">
+                <label for="endDate" class="sr-only">End Date</label>
+                <input type="date" id="endDate" name="endDate" value="@Request.Query["endDate"]" class="form-control" />
+            </div>
+
+            <div class="col-auto">
+                <label for="venueAvailable" class="sr-only">Venue Available</label>
+                <select id="venueAvailable" name="venueAvailable" class="form-control">
+                    <option value="">Any Availability</option>
+                    <option value="true" @(Request.Query["venueAvailable"] == "true" ? "selected" : "")>Available</option>
+                    <option value="false" @(Request.Query["venueAvailable"] == "false" ? "selected" : "")>Not Available</option>
+                </select>
+            </div>
+
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary">Filter</button>
+            </div>
+        </div>
+    </form>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Event Name</th>
+                <th>Event Date</th>
+                <th>Venue</th>
+                <th>Venue Availability</th>
+                <th>Event Type</th>
+                <th>Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var evt in Model)
+        {
+            <tr>
+                <td>@evt.EventName</td>
+                <td>@evt.EventDate.ToShortDateString()</td>
+                <td>@evt.Venue.VenueName</td>
+                <td>@(evt.Venue.Availability ? "Available" : "Not Available")</td>
+                <td>@evt.EventType.Name</td>
+                <td>@evt.Description</td>
+            </tr>
+        }
+        </tbody>
+    </table>
